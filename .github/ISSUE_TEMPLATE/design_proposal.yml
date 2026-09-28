@@ -1,0 +1,83 @@
+name: Feature / design proposal
+description: Propose a gameplay feature, architecture change, compatibility feature, or design adjustment.
+title: "[Proposal] "
+labels:
+  - proposal
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Steel Meridian is intentionally opinionated about scale and Factorio fidelity. The goal of this form is to make the reason for a change clear before implementation begins.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Proposal
+      description: What are you proposing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: factorio
+    attributes:
+      label: Factorio precedent
+      description: If Factorio has an equivalent system, describe its relevant behavior. If not, say so.
+    validations:
+      required: true
+
+  - type: textarea
+    id: minecraft
+    attributes:
+      label: Minecraft adaptation
+      description: How should the idea change, if at all, because Steel Meridian exists in a three-dimensional Minecraft world?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where does this belong?
+      options:
+        - Base Steel Meridian
+        - Compatibility integration
+        - Optional addon / expansion
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: scale
+    attributes:
+      label: Scale and performance considerations
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility considerations
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have read the current architecture document.
+          required: true
+        - label: I searched for an existing issue or proposal covering the same idea.
+          required: true

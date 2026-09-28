@@ -1,0 +1,87 @@
+name: Bug report
+description: Report something in Steel Meridian that is not behaving correctly.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a Steel Meridian bug. Please include enough information for someone else to reproduce it.
+
+  - type: input
+    id: steel-meridian-version
+    attributes:
+      label: Steel Meridian version
+      description: Release version, commit hash, or branch.
+      placeholder: 0.0.1-indev / abc1234 / main
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft / NeoForge version
+      placeholder: Minecraft 1.21.11, NeoForge 21.11.x
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Singleplayer
+        - Dedicated server
+        - Integrated server / LAN
+        - Development client
+        - Development server
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Place ...
+        2. Configure ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other installed mods
+      description: List other mods if they may be relevant. Write "None" for a clean Steel Meridian environment.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, crash reports, screenshots, or profiler data
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I checked that this issue has not already been reported.
+          required: true
+        - label: I can reproduce this on the version or commit listed above.
+          required: true
