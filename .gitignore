@@ -1,66 +1,44 @@
-### Gradle ###
-.gradle
+# Gradle
+.gradle/
+.gradle-local/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/**/build/
+repo/
 
-### IntelliJ IDEA ###
+# Project-local tooling
+.tooling/
+
+# Minecraft / NeoForge runtime
+run/
+runs/
+
+# Generated resource cache
+**/src/generated/**/.cache/
+
+# IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
 out/
-!**/src/**/out/
-
 .run/
-
-### Eclipse ###
-.apt_generated
-.classpath
-.eclipse/
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/**/bin/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
-.DS_Store
-
-### Minecraft Modding ###
-run/
-!**/src/**/run/
-**/src/generated/**/.cache/
-repo/
-!**/src/**/repo/
-
-# Project-local tooling
-.tooling/
-
-# Optional project-local Gradle cache
-.gradle-local/
-
-# Gradle
-.gradle/
-build/
-
-# Minecraft run directories
-run/
-runs/
-
-# IntelliJ
-.idea/
-*.iml
-out/
 
 # VS Code
 .vscode/
 
-# OS/editor junk
+# Eclipse
+.apt_generated/
+.classpath
+.eclipse/
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+# OS / editor junk
 .DS_Store
+Thumbs.db
 *~
+*.swp
+*.swo
