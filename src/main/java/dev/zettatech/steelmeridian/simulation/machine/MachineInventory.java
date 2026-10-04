@@ -76,4 +76,21 @@ public final class MachineInventory {
     public boolean contains(Identifier item, int count) {
         return count > 0 && count(item) >= count;
     }
+
+    public int capacity() {
+        return capacity;
+    }
+
+    public Identifier firstItem() {
+        return items.keySet().stream().findFirst().orElse(null);
+    }
+
+    public Map<Identifier, Integer> snapshot() {
+        return Map.copyOf(items);
+    }
+
+    public void restore(Map<Identifier, Integer> snapshot) {
+        items.clear();
+        items.putAll(snapshot);
+    }
 }
