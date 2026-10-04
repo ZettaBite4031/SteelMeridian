@@ -24,6 +24,21 @@ sourceSets.main.resources {
     exclude("src/generated/**/.cache")
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
 neoForge {
     version = project.neo_version
 
@@ -85,6 +100,8 @@ configurations {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    localRuntime "maven.modrinth:nvQzSEkH:21.1.7+neoforge"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

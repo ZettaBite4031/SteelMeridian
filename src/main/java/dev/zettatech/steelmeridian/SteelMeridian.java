@@ -1,7 +1,9 @@
 package dev.zettatech.steelmeridian;
 
 import com.mojang.logging.LogUtils;
+import dev.zettatech.steelmeridian.content.ModContent;
 import dev.zettatech.steelmeridian.simulation.scheduler.SimulationScheduler;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -14,9 +16,11 @@ public final class SteelMeridian {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final SimulationScheduler simulationScheduler = new SimulationScheduler();
+    private static final SimulationScheduler SIMULATION_SCHEDULER = new SimulationScheduler();
 
-    public SteelMeridian() {
+    public SteelMeridian(IEventBus modBus) {
+        ModContent.register(modBus);
+
         NeoForge.EVENT_BUS.addListener(this::onServerTick);
         NeoForge.EVENT_BUS.addListener(this::onServerStopped);
 
@@ -24,10 +28,15 @@ public final class SteelMeridian {
     }
 
     private void onServerTick(ServerTickEvent.Post event) {
-        simulationScheduler.tick();
+        SIMULATION_SCHEDULER.tick();
     }
 
     private void onServerStopped(ServerStoppedEvent event) {
-        simulationScheduler.clear();
+        SIMULATION_SCHEDULER.clear();
     }
+
+    public static SimulationScheduler simulationScheduler() {
+        return SIMULATION_SCHEDULER;
+    }
+
 }

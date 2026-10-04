@@ -27,7 +27,7 @@ class MachineStateTest {
         MachineState machine = new MachineState(scheduler);
         ProcessRecipe recipe = testRecipe(3);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
 
         assertTrue(machine.start(recipe));
         assertEquals(MachineStatus.RUNNING, machine.status());
@@ -40,13 +40,13 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
 
-        assertEquals(1, machine.input().count(rawIron()));
+        assertEquals(1, machine.inventory(MachineEndpoint.INPUT).count(rawIron()));
 
         assertTrue(machine.start(testRecipe(3)));
 
-        assertEquals(0, machine.input().count(rawIron()));
+        assertEquals(0, machine.inventory(MachineEndpoint.INPUT).count(rawIron()));
     }
 
     @Test
@@ -54,7 +54,7 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
         machine.start(testRecipe(3));
 
         scheduler.tick();
@@ -62,7 +62,7 @@ class MachineStateTest {
 
         assertTrue(machine.isRunning());
         assertEquals(MachineStatus.RUNNING, machine.status());
-        assertEquals(0, machine.output().count(ironIngot()));
+        assertEquals(0, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
         assertEquals(0, machine.completedProcesses());
     }
 
@@ -71,7 +71,7 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
         machine.start(testRecipe(3));
 
         scheduler.tick();
@@ -80,7 +80,7 @@ class MachineStateTest {
 
         assertEquals(MachineStatus.IDLE, machine.status());
         assertNull(machine.activeRecipe());
-        assertEquals(1, machine.output().count(ironIngot()));
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
         assertEquals(1, machine.completedProcesses());
     }
 
@@ -89,7 +89,7 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
         machine.start(testRecipe(1));
 
         scheduler.tick();
@@ -97,7 +97,7 @@ class MachineStateTest {
         scheduler.tick();
 
         assertEquals(1, machine.completedProcesses());
-        assertEquals(1, machine.output().count(ironIngot()));
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
     }
 
     @Test
@@ -108,7 +108,7 @@ class MachineStateTest {
         ProcessRecipe first = testRecipe(3);
         ProcessRecipe second = testRecipe(1);
 
-        machine.input().insert(rawIron(), 2);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 2);
 
         assertTrue(machine.start(first));
         assertFalse(machine.start(second));
@@ -117,7 +117,7 @@ class MachineStateTest {
         assertEquals(MachineStatus.RUNNING, machine.status());
 
         // Only the first recipe consumed input.
-        assertEquals(1, machine.input().count(rawIron()));
+        assertEquals(1, machine.inventory(MachineEndpoint.INPUT).count(rawIron()));
     }
 
     @Test
@@ -125,16 +125,16 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
         machine.start(testRecipe(2));
 
         scheduler.tick();
 
-        assertEquals(0, machine.output().count(ironIngot()));
+        assertEquals(0, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
 
         scheduler.tick();
 
-        assertEquals(1, machine.output().count(ironIngot()));
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
     }
 
     @Test
@@ -142,8 +142,8 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
-        machine.output().insert(cobblestone(), 64);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.OUTPUT).insert(cobblestone(), 64);
 
         assertTrue(machine.start(testRecipe(1)));
 
@@ -151,7 +151,7 @@ class MachineStateTest {
 
         assertEquals(MachineStatus.OUTPUT_BLOCKED, machine.status());
         assertEquals(testRecipeId(), machine.activeRecipe().id());
-        assertEquals(0, machine.output().count(ironIngot()));
+        assertEquals(0, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
         assertEquals(0, machine.completedProcesses());
     }
 
@@ -160,8 +160,8 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 1);
-        machine.output().insert(cobblestone(), 64);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 1);
+        machine.inventory(MachineEndpoint.OUTPUT).insert(cobblestone(), 64);
 
         assertTrue(machine.start(testRecipe(1)));
 
@@ -169,11 +169,11 @@ class MachineStateTest {
 
         assertEquals(MachineStatus.OUTPUT_BLOCKED, machine.status());
 
-        machine.output().remove(cobblestone(), 1);
+        machine.inventory(MachineEndpoint.OUTPUT).remove(cobblestone(), 1);
 
         assertEquals(MachineStatus.IDLE, machine.status());
         assertNull(machine.activeRecipe());
-        assertEquals(1, machine.output().count(ironIngot()));
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
         assertEquals(1, machine.completedProcesses());
     }
 
@@ -182,8 +182,8 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 2);
-        machine.output().insert(cobblestone(), 64);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 2);
+        machine.inventory(MachineEndpoint.OUTPUT).insert(cobblestone(), 64);
 
         machine.start(testRecipe(1));
         scheduler.tick();
@@ -197,7 +197,7 @@ class MachineStateTest {
         SimulationScheduler scheduler = new SimulationScheduler();
         MachineState machine = new MachineState(scheduler);
 
-        machine.input().insert(rawIron(), 2);
+        machine.inventory(MachineEndpoint.INPUT).insert(rawIron(), 2);
 
         assertTrue(machine.start(testRecipe(1)));
         scheduler.tick();
@@ -210,7 +210,7 @@ class MachineStateTest {
 
         assertEquals(MachineStatus.IDLE, machine.status());
         assertEquals(2, machine.completedProcesses());
-        assertEquals(2, machine.output().count(ironIngot()));
+        assertEquals(2, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
     }
 
     private static ProcessRecipe testRecipe(long durationTicks) {

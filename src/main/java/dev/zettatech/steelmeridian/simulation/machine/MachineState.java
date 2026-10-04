@@ -116,12 +116,11 @@ public final class MachineState {
         return totals;
     }
 
-    public MachineInventory input() {
-        return input;
-    }
-
-    public MachineInventory output() {
-        return output;
+    public MachineInventory inventory(MachineEndpoint endpoint) {
+        return switch (endpoint) {
+            case INPUT -> input;
+            case OUTPUT -> output;
+        };
     }
 
     public MachineStatus status() {
