@@ -14,6 +14,7 @@ public final class MachineState {
     private final SimulationScheduler scheduler;
     private final MachineInventory input;
     private final MachineInventory output;
+    private final Runnable onChanged;
 
     private MachineStatus status = MachineStatus.IDLE;
 
@@ -21,9 +22,15 @@ public final class MachineState {
     private ProcessRecipe activeRecipe;
 
     private long completedProcesses;
+    private long completionTick = -1;
 
     public MachineState(SimulationScheduler scheduler) {
+        this(scheduler, () -> {});
+    }
+
+    public MachineState(SimulationScheduler scheduler, Runnable onChanged) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+        this.onChanged = Objects.requireNonNull(onChanged, "onChanged");
 
         input = new MachineInventory(
             DEFAULT_INVENTORY_CAPACITY,
@@ -36,6 +43,10 @@ public final class MachineState {
         );
     }
 
+    private void stateChanged() {
+        onChanged.run();
+    }
+
     public boolean selectRecipe(ProcessRecipe recipe) {
         Objects.requireNonNull(recipe, "recipe");
 
@@ -44,6 +55,8 @@ public final class MachineState {
         }
 
         selectedRecipe = recipe;
+        stateChanged();
+
         tryStartSelectedRecipe();
 
         return true;
@@ -55,6 +68,8 @@ public final class MachineState {
         }
 
         selectedRecipe = null;
+        stateChanged();
+
         return true;
     }
 
@@ -82,10 +97,14 @@ public final class MachineState {
          */
         consumeInput(activeRecipe);
 
+        completionTick = scheduler.currentTick() + activeRecipe.durationTicks();
+
         scheduler.schedule(
             activeRecipe.durationTicks(),
             this::completeProcess
         );
+
+        stateChanged();
     }
 
     private void completeProcess() {
@@ -95,6 +114,8 @@ public final class MachineState {
 
         if (!canStoreOutputs(activeRecipe)) {
             status = MachineStatus.OUTPUT_BLOCKED;
+            completionTick = -1;
+            stateChanged();
             return;
         }
 
@@ -112,7 +133,9 @@ public final class MachineState {
 
         completedProcesses++;
         activeRecipe = null;
+        completionTick = -1;
         status = MachineStatus.IDLE;
+        stateChanged();
 
         tryStartSelectedRecipe();
     }
@@ -203,7 +226,33 @@ public final class MachineState {
         return completedProcesses;
     }
 
+    public long remainingProcessTicks() {
+        if (status != MachineStatus.RUNNING || completionTick < 0) {
+            return 0;
+        }
+
+        return Math.max(0, completionTick - scheduler.currentTick());
+    }
+
     public boolean isRunning() {
         return status == MachineStatus.RUNNING;
+    }
+
+    public void restore(ProcessRecipe selectedRecipe, ProcessRecipe activeRecipe, MachineStatus status, long completedProcesses, long remainingTicks, Map<Identifier, Integer> inputItems, Map<Identifier, Integer> outputItems) {
+        this.selectedRecipe = selectedRecipe;
+        this.activeRecipe = activeRecipe;
+        this.status = status;
+        this.completedProcesses = completedProcesses;
+
+        input.restore(inputItems);
+        output.restore(outputItems);
+
+        if (status == MachineStatus.RUNNING && activeRecipe != null) {
+            long delay = Math.max(1, remainingTicks);
+            completionTick = scheduler.currentTick() + delay;
+            scheduler.schedule(delay, this::completeProcess);
+        } else {
+            completionTick = -1;
+        }
     }
 }

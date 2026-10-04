@@ -92,5 +92,6 @@ public final class MachineInventory {
     public void restore(Map<Identifier, Integer> snapshot) {
         items.clear();
         items.putAll(snapshot);
+        onChanged.run();
     }
 }
