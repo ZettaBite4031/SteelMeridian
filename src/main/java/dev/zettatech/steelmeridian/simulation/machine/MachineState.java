@@ -2,7 +2,6 @@ package dev.zettatech.steelmeridian.simulation.machine;
 
 import dev.zettatech.steelmeridian.simulation.recipe.ProcessRecipe;
 import dev.zettatech.steelmeridian.simulation.scheduler.SimulationScheduler;
-
 import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
@@ -17,39 +16,80 @@ public final class MachineState {
     private final MachineInventory output;
 
     private MachineStatus status = MachineStatus.IDLE;
+
+    private ProcessRecipe selectedRecipe;
     private ProcessRecipe activeRecipe;
+
     private long completedProcesses;
 
     public MachineState(SimulationScheduler scheduler) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
 
-        input = new MachineInventory(DEFAULT_INVENTORY_CAPACITY);
-        output = new MachineInventory(DEFAULT_INVENTORY_CAPACITY, this::onOutputChanged);
+        input = new MachineInventory(
+            DEFAULT_INVENTORY_CAPACITY,
+            this::onInputChanged
+        );
+
+        output = new MachineInventory(
+            DEFAULT_INVENTORY_CAPACITY,
+            this::onOutputChanged
+        );
     }
 
-    public boolean start(ProcessRecipe recipe) {
+    public boolean selectRecipe(ProcessRecipe recipe) {
         Objects.requireNonNull(recipe, "recipe");
 
         if (status != MachineStatus.IDLE) {
             return false;
         }
 
-        if (!hasInputs(recipe)) {
-            return false;
-        }
-
-        consumeInput(recipe);
-
-        activeRecipe = recipe;
-        status = MachineStatus.RUNNING;
-
-        scheduler.schedule(recipe.durationTicks(), this::completeProcess);
+        selectedRecipe = recipe;
+        tryStartSelectedRecipe();
 
         return true;
     }
 
+    public boolean clearRecipe() {
+        if (status != MachineStatus.IDLE) {
+            return false;
+        }
+
+        selectedRecipe = null;
+        return true;
+    }
+
+    public boolean canRunSelectedRecipe() {
+        return selectedRecipe != null
+            && status == MachineStatus.IDLE
+            && hasInputs(selectedRecipe);
+    }
+
+    private void tryStartSelectedRecipe() {
+        if (!canRunSelectedRecipe()) {
+            return;
+        }
+
+        startSelectedRecipe();
+    }
+
+    private void startSelectedRecipe() {
+        activeRecipe = selectedRecipe;
+        status = MachineStatus.RUNNING;
+
+        /*
+         * Status becomes RUNNING before removing items so the inventory
+         * callback cannot accidentally start another process.
+         */
+        consumeInput(activeRecipe);
+
+        scheduler.schedule(
+            activeRecipe.durationTicks(),
+            this::completeProcess
+        );
+    }
+
     private void completeProcess() {
-        if (status != MachineStatus.RUNNING) {
+        if (status != MachineStatus.RUNNING || activeRecipe == null) {
             return;
         }
 
@@ -58,27 +98,38 @@ public final class MachineState {
             return;
         }
 
+        finishProcess();
+    }
+
+    private void finishProcess() {
+        /*
+         * Make sure output callbacks cannot recursively treat this as a
+         * blocked process while outputs are being inserted.
+         */
+        status = MachineStatus.RUNNING;
+
         produceOutputs(activeRecipe);
 
         completedProcesses++;
         activeRecipe = null;
         status = MachineStatus.IDLE;
+
+        tryStartSelectedRecipe();
+    }
+
+    private void onInputChanged() {
+        tryStartSelectedRecipe();
     }
 
     private void onOutputChanged() {
-        if (status != MachineStatus.OUTPUT_BLOCKED) {
+        if (status != MachineStatus.OUTPUT_BLOCKED
+            || activeRecipe == null) {
             return;
         }
 
-        if (!canStoreOutputs(activeRecipe)) {
-            return;
+        if (canStoreOutputs(activeRecipe)) {
+            finishProcess();
         }
-
-        produceOutputs(activeRecipe);
-
-        completedProcesses++;
-        activeRecipe = null;
-        status = MachineStatus.IDLE;
     }
 
     private boolean hasInputs(ProcessRecipe recipe) {
@@ -98,8 +149,13 @@ public final class MachineState {
     }
 
     private boolean canStoreOutputs(ProcessRecipe recipe) {
-        int requireCapacity = amountsByItem(recipe.outputs()).values().stream().mapToInt(Integer::intValue).sum();
-        return output.remainingCapacity() >= requireCapacity;
+        int requiredCapacity = amountsByItem(recipe.outputs())
+            .values()
+            .stream()
+            .mapToInt(Integer::intValue)
+            .sum();
+
+        return output.remainingCapacity() >= requiredCapacity;
     }
 
     private void produceOutputs(ProcessRecipe recipe) {
@@ -108,11 +164,19 @@ public final class MachineState {
         }
     }
 
-    private static Map<Identifier, Integer> amountsByItem(Iterable<ProcessRecipe.ItemAmount> amounts) {
+    private static Map<Identifier, Integer> amountsByItem(
+        Iterable<ProcessRecipe.ItemAmount> amounts
+    ) {
         Map<Identifier, Integer> totals = new HashMap<>();
+
         for (ProcessRecipe.ItemAmount amount : amounts) {
-            totals.merge(amount.item(), amount.count(), Integer::sum);
+            totals.merge(
+                amount.item(),
+                amount.count(),
+                Integer::sum
+            );
         }
+
         return totals;
     }
 
@@ -123,12 +187,16 @@ public final class MachineState {
         };
     }
 
-    public MachineStatus status() {
-        return status;
+    public ProcessRecipe selectedRecipe() {
+        return selectedRecipe;
     }
 
     public ProcessRecipe activeRecipe() {
         return activeRecipe;
+    }
+
+    public MachineStatus status() {
+        return status;
     }
 
     public long completedProcesses() {

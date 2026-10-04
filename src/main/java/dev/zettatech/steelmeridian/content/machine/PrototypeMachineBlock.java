@@ -3,6 +3,7 @@ package dev.zettatech.steelmeridian.content.machine;
 import com.mojang.serialization.MapCodec;
 import dev.zettatech.steelmeridian.SteelMeridian;
 import dev.zettatech.steelmeridian.content.ModContent;
+import dev.zettatech.steelmeridian.content.PrototypeRecipes;
 import dev.zettatech.steelmeridian.simulation.machine.MachineState;
 import dev.zettatech.steelmeridian.simulation.recipe.ProcessCategory;
 import dev.zettatech.steelmeridian.simulation.recipe.ProcessRecipe;
@@ -51,9 +52,12 @@ public final class PrototypeMachineBlock extends Block implements EntityBlock {
             Identifier rawIron = Identifier.fromNamespaceAndPath("minecraft", "raw_iron");
             Identifier ironIngot = Identifier.fromNamespaceAndPath("minecraft", "iron_ingot");
 
+            String selected = machine.selectedRecipe() == null ? "none" : machine.selectedRecipe().id().toString();
+
             player.displayClientMessage(
                 Component.literal(
                     "State: " + machine.status()
+                        + " | Recipe: " + selected
                         + " | Raw iron: "
                         + machine.inventory(MachineEndpoint.INPUT)
                         .count(rawIron)
@@ -97,29 +101,12 @@ public final class PrototypeMachineBlock extends Block implements EntityBlock {
         }
 
         if (stack.is(Items.STICK)) {
-            boolean started = machine.start(testRecipe());
-            player.displayClientMessage(
-                Component.literal(
-                    started
-                        ? "Prototype recipe started."
-                        : "Machine could not start."
-                ),
-                false
-            );
+            boolean selected = machine.selectRecipe(PrototypeRecipes.IRON_PROCESSING);
+            player.displayClientMessage(Component.literal(selected ? "Selected prototype iron recipe." : "Recipe could not be changed"), false);
 
             return InteractionResult.SUCCESS_SERVER;
         }
 
         return InteractionResult.TRY_WITH_EMPTY_HAND;
-    }
-
-    private static ProcessRecipe testRecipe() {
-        return new ProcessRecipe(
-            Identifier.fromNamespaceAndPath(SteelMeridian.MOD_ID, "prototype_iron_processing"),
-            ProcessCategory.SMELTING,
-            60,
-            List.of(new ProcessRecipe.ItemAmount(Identifier.fromNamespaceAndPath("minecraft", "raw_iron"), 1)),
-            List.of(new ProcessRecipe.ItemAmount(Identifier.fromNamespaceAndPath("minecraft", "iron_ingot"), 1))
-        );
     }
 }
