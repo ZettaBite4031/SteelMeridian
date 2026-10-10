@@ -244,8 +244,8 @@ public final class MachineState {
         this.status = status;
         this.completedProcesses = completedProcesses;
 
-        input.restore(inputItems);
-        output.restore(outputItems);
+        input.restore(inputItems, false);
+        output.restore(outputItems, false);
 
         if (status == MachineStatus.RUNNING && activeRecipe != null) {
             long delay = Math.max(1, remainingTicks);

@@ -332,6 +332,97 @@ class MachineStateTest {
         assertEquals(0, machine.remainingProcessTicks());
     }
 
+    @Test
+    void restoreRestoresInventories() {
+        SimulationScheduler scheduler = new SimulationScheduler();
+        MachineState machine = new MachineState(scheduler);
+
+        machine.restore(null, null, MachineStatus.IDLE,
+            0, 0, java.util.Map.of(rawIron(), 4),
+            java.util.Map.of(ironIngot(), 2) );
+
+        assertEquals(4, machine.inventory(MachineEndpoint.INPUT).count(rawIron()));
+        assertEquals(2, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
+    }
+
+    @Test
+    void restoreRestoresSelectedRecipe() {
+        SimulationScheduler scheduler = new SimulationScheduler();
+        MachineState machine = new MachineState(scheduler);
+
+        ProcessRecipe recipe = testRecipe(3);
+
+        machine.restore(recipe, null, MachineStatus.IDLE, 5, 0,
+            java.util.Map.of(), java.util.Map.of());
+
+        assertSame(recipe, machine.selectedRecipe());
+        assertNull(machine.activeRecipe());
+        assertEquals(MachineStatus.IDLE, machine.status());
+        assertEquals(5, machine.completedProcesses());
+    }
+
+    @Test
+    void restoredRunningProcessResumes() {
+        SimulationScheduler scheduler = new SimulationScheduler();
+        MachineState machine = new MachineState(scheduler);
+
+        ProcessRecipe recipe = testRecipe(10);
+
+        machine.restore(recipe, recipe, MachineStatus.RUNNING, 0, 3,
+            java.util.Map.of(), java.util.Map.of());
+
+        assertEquals(MachineStatus.RUNNING, machine.status());
+        assertEquals(3, machine.remainingProcessTicks());
+
+        scheduler.tick();
+        scheduler.tick();
+
+        assertEquals(MachineStatus.RUNNING, machine.status());
+        assertEquals(0, machine.completedProcesses());
+
+        scheduler.tick();
+
+        assertEquals(MachineStatus.IDLE, machine.status());
+        assertNull(machine.activeRecipe());
+        assertEquals(1, machine.completedProcesses());
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
+    }
+
+    @Test
+    void restoredBlockedProcessCompletesWhenSpaceBecomesAvailable() {
+        SimulationScheduler scheduler = new SimulationScheduler();
+        MachineState machine = new MachineState(scheduler);
+
+        ProcessRecipe recipe = testRecipe(1);
+
+        machine.restore(recipe, recipe, MachineStatus.OUTPUT_BLOCKED, 0, 0,
+            java.util.Map.of(), java.util.Map.of(cobblestone(), 64));
+
+        assertEquals(MachineStatus.OUTPUT_BLOCKED, machine.status());
+
+        machine.inventory(MachineEndpoint.OUTPUT) .remove(cobblestone(), 1);
+
+        assertEquals(MachineStatus.IDLE, machine.status());
+        assertNull(machine.activeRecipe());
+        assertEquals(1, machine.completedProcesses());
+        assertEquals(1, machine.inventory(MachineEndpoint.OUTPUT).count(ironIngot()));
+    }
+
+    @Test
+    void restoreDoesNotAccidentallyStartSelectedRecipe() {
+        SimulationScheduler scheduler = new SimulationScheduler();
+        MachineState machine = new MachineState(scheduler);
+
+        ProcessRecipe recipe = testRecipe(3);
+
+        machine.restore(recipe, null, MachineStatus.IDLE, 0, 0,
+            java.util.Map.of(rawIron(), 1), java.util.Map.of());
+
+        assertEquals(MachineStatus.IDLE, machine.status());
+        assertNull(machine.activeRecipe());
+        assertEquals(1, machine.inventory(MachineEndpoint.INPUT).count(rawIron()));
+    }
+
     private static ProcessRecipe testRecipe(long durationTicks) {
         return new ProcessRecipe(testRecipeId(), ProcessCategory.SMELTING, durationTicks,
             List.of(new ProcessRecipe.ItemAmount(rawIron(), 1)),

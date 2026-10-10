@@ -89,9 +89,14 @@ public final class MachineInventory {
         return Map.copyOf(items);
     }
 
-    public void restore(Map<Identifier, Integer> snapshot) {
+    public void restore(Map<Identifier, Integer> snapshot, boolean notify) {
+        Objects.requireNonNull(snapshot, "snapshot");
+
         items.clear();
         items.putAll(snapshot);
-        onChanged.run();
+
+        if (notify){
+            onChanged.run();
+        }
     }
 }

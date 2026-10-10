@@ -117,6 +117,6 @@ public final class MachineItemHandler extends SnapshotJournal<Map<Identifier, In
 
     @Override
     protected void revertToSnapshot(Map<Identifier, Integer> snapshot) {
-        inventory.restore(snapshot);
+        inventory.restore(snapshot, false);
     }
 }
