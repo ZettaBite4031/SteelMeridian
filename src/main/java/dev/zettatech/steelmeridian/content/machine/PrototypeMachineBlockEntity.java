@@ -9,16 +9,22 @@ import dev.zettatech.steelmeridian.simulation.machine.MachineState;
 import dev.zettatech.steelmeridian.simulation.machine.MachineStatus;
 import dev.zettatech.steelmeridian.simulation.recipe.ProcessRecipe;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class PrototypeMachineBlockEntity extends BlockEntity {
+public final class PrototypeMachineBlockEntity extends BlockEntity implements MenuProvider {
     private final MachineState machineState;
 
     private final MachineItemHandler inputHandler;
@@ -43,6 +49,16 @@ public final class PrototypeMachineBlockEntity extends BlockEntity {
 
     public MachineItemHandler inputHandler() {
         return inputHandler;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.steelmeridian.prototype_machine");
+    }
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+        return new PrototypeMachineMenu(containerId, playerInventory, this);
     }
 
     @Override
